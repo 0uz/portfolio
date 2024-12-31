@@ -1,0 +1,33 @@
+body {
+    margin: 0;
+    padding: 0;
+    background-color: #1a1a1a;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+#terminal-container {
+    flex: 1;
+    background-color: #000;
+    margin: 30px;
+    border-radius: 8px;
+    box-shadow: 0 0 20px rgba(0,0,0,0.7);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+}
+
+.terminal {
+    height: 100%;
+    padding: 15px;
+}
+
+.xterm .xterm-viewport {
+    overflow-y: hidden !important;
+}
+
+.xterm-screen {
+    padding: 5px;
+}

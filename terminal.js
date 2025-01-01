@@ -71,7 +71,7 @@ function getWelcomeMessage() {
         // Mobil cihazlar için basit başlık
         return '\x1b[1m\x1b[38;5;205m' + 
             '╔═══════════════════╗\n' +
-            '║  Backend OUZ      ║\n' +
+            '║    Backend OUZ    ║\n' +
             '╚═══════════════════╝\x1b[0m';
     }
     

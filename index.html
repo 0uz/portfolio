@@ -9,12 +9,7 @@
 </head>
 <body>
     <div id="terminal-container"></div>
-    <div id="mobile-commands" class="mobile-only">
-        <button onclick="executeCommand('help')">Help</button>
-        <button onclick="executeCommand('clear')">Clear</button>
-        <button onclick="executeCommand('docker ps')">Docker PS</button>
-        <button onclick="executeCommand('curl localhost:8080/api/profile')">Profile</button>
-    </div>
+    <div id="mobile-commands" class="mobile-only"></div>
     <!-- Load scripts in correct order -->
     <script src="https://cdn.jsdelivr.net/npm/xterm@5.3.0/lib/xterm.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/xterm-addon-web-links@0.9.0/lib/xterm-addon-web-links.min.js"></script>
@@ -113,6 +108,138 @@
                 term.write(terminalState.prompt);
             }
         }
+
+        // Mobil komut butonlarını güncelle
+        function updateMobileCommands() {
+            const mobileCommands = document.getElementById('mobile-commands');
+            mobileCommands.innerHTML = '';
+
+            const command = terminalState.currentLine.trim().toLowerCase();
+            if (command.startsWith('curl')) {
+                const buttons = [
+                    'localhost:8080/api/profile',
+                    'localhost:8080/api/experience',
+                    'localhost:8080/api/projects',
+                    'localhost:8080/api/links'
+                ];
+                buttons.forEach(btn => {
+                    const button = document.createElement('button');
+                    button.textContent = btn;
+                    button.onclick = () => executeCommand(`curl ${btn}`);
+                    mobileCommands.appendChild(button);
+                });
+            } else {
+                const buttons = [
+                    'help',
+                    'clear',
+                    'docker ps',
+                    'curl localhost:8080/api/profile'
+                ];
+                buttons.forEach(btn => {
+                    const button = document.createElement('button');
+                    button.textContent = btn;
+                    button.onclick = () => executeCommand(btn);
+                    mobileCommands.appendChild(button);
+                });
+            }
+        }
+
+        // Terminal giriş/çıkış yönetimi
+        term.onKey(({ key, domEvent }) => {
+            const ev = domEvent;
+            const printable = !ev.altKey && !ev.ctrlKey && !ev.metaKey;
+
+            if (ev.keyCode === 9) { // Tab
+                ev.preventDefault();
+                const completedLine = handleTabCompletion(terminalState.currentLine);
+                if (completedLine !== terminalState.currentLine) {
+                    terminalState.currentLine = completedLine;
+                    terminalState.cursorPosition = completedLine.length;
+                    refreshLine();
+                }
+            }
+            else if (ev.keyCode === 13) { // Enter
+                term.write('\r\n');
+                const command = terminalState.currentLine.trim();
+                
+                if (command) {
+                    addToHistory(command);
+                    const [cmd, ...args] = command.toLowerCase().split(' ');
+                    
+                    if (commands.hasOwnProperty(cmd)) {
+                        try {
+                            Promise.resolve(commands[cmd](args)).finally(() => {
+                                terminalState.currentLine = '';
+                                terminalState.cursorPosition = 0;
+                                term.write('\r\n' + terminalState.prompt);
+                            });
+                        } catch (error) {
+                            writeLine('Error executing command: ' + error);
+                            term.write(terminalState.prompt);
+                        }
+                    } else {
+                        writeLine(`Command not found: ${cmd}`);
+                        writeLine('Type "help" for available commands');
+                        term.write(terminalState.prompt);
+                    }
+                } else {
+                    term.write(terminalState.prompt);
+                }
+
+                terminalState.currentLine = '';
+                terminalState.cursorPosition = 0;
+                terminalState.historyIndex = -1;
+                updateMobileCommands();
+            }
+            else if (ev.keyCode === 8) { // Backspace
+                if (terminalState.cursorPosition > 0) {
+                    terminalState.currentLine = 
+                        terminalState.currentLine.slice(0, terminalState.cursorPosition - 1) + 
+                        terminalState.currentLine.slice(terminalState.cursorPosition);
+                    terminalState.cursorPosition--;
+                    refreshLine();
+                }
+            }
+            else if (ev.keyCode === 37) { // Sol ok
+                if (terminalState.cursorPosition > 0) {
+                    terminalState.cursorPosition--;
+                    term.write('\x1b[D');
+                }
+            }
+            else if (ev.keyCode === 39) { // Sağ ok
+                if (terminalState.cursorPosition < terminalState.currentLine.length) {
+                    terminalState.cursorPosition++;
+                    term.write('\x1b[C');
+                }
+            }
+            else if (ev.keyCode === 38) { // Yukarı ok
+                if (terminalState.historyIndex < terminalState.commandHistory.length - 1) {
+                    terminalState.historyIndex++;
+                    terminalState.currentLine = terminalState.commandHistory[terminalState.historyIndex];
+                    terminalState.cursorPosition = terminalState.currentLine.length;
+                    refreshLine();
+                }
+            }
+            else if (ev.keyCode === 40) { // Aşağı ok
+                if (terminalState.historyIndex > -1) {
+                    terminalState.historyIndex--;
+                    terminalState.currentLine = terminalState.historyIndex >= 0 
+                        ? terminalState.commandHistory[terminalState.historyIndex]
+                        : '';
+                    terminalState.cursorPosition = terminalState.currentLine.length;
+                    refreshLine();
+                }
+            }
+            else if (printable && key.length === 1) {
+                terminalState.currentLine = 
+                    terminalState.currentLine.slice(0, terminalState.cursorPosition) +
+                    key +
+                    terminalState.currentLine.slice(terminalState.cursorPosition);
+                terminalState.cursorPosition++;
+                refreshLine();
+                updateMobileCommands();
+            }
+        });
     </script>
     <script src="commands.js"></script>
     <script src="terminal.js"></script>

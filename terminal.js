@@ -197,3 +197,19 @@ term.onKey(({ key, domEvent }) => {
         updateMobileCommands(); // Her karakter girişinde komutları güncelle
     }
 });
+
+// Mobil klavye için ek olay dinleyicisi
+document.addEventListener('input', function(e) {
+    if (e.target.tagName !== 'INPUT' && e.target.tagName !== 'TEXTAREA') {
+        e.preventDefault();
+    }
+}, true);
+
+// Terminal container'a tıklandığında mobil klavyeyi göster
+document.getElementById('terminal-container').addEventListener('click', function() {
+    term.focus();
+});
+
+// Terminal başlatıldığında mobil butonları güncelle ve klavye odağını ayarla
+updateMobileCommands();
+term.focus();

@@ -1,5 +1,14 @@
 // term zaten terminal-config.js'de oluşturuldu, tekrar oluşturmaya gerek yok
 
+// Terminal başlangıç durumu
+const terminalState = {
+    commandHistory: [],
+    historyIndex: -1,
+    currentLine: '',
+    cursorPosition: 0,
+    prompt: '\x1b[1m\x1b[38;5;87m➜\x1b[0m \x1b[1m\x1b[38;5;76m~/portfolio\x1b[0m \x1b[38;5;39m$\x1b[0m '
+};
+
 // Terminal container'a bağla
 term.open(document.getElementById('terminal-container'));
 

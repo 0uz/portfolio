@@ -12,11 +12,26 @@ const terminalConfig = {
     rendererType: 'canvas',
     convertEol: true,
     wordWrap: true,
-    scrollback: 1000
+    scrollback: 1000,
+    // Link desteği için yeni ayarlar ekle
+    allowProposedApi: true,
+    linkHandler: {
+        activate: (e, uri) => {
+            window.open(uri, '_blank');
+            return false;
+        }
+    },
+    windowOptions: {
+        windowsMode: true
+    }
 };
 
 // Global term değişkenini oluştur
 term = new Terminal(terminalConfig);
+
+// Link eklentisini yükle
+const webLinksAddon = new WebLinksAddon();
+term.loadAddon(webLinksAddon);
 
 const terminalState = {
     commandHistory: [],

@@ -62,9 +62,10 @@ function getCurrentDate() {
     });
 }
 
-// Link formatlamak için yardımcı fonksiyon
+// Link formatlamak için yardımcı fonksiyon güncellendi
 function formatLink(url) {
-    return `\x1b]8;;${url}\x1b\\${url}\x1b]8;;\x1b\\`;
+    // OSC 8 formatını kullan (xterm.js tarafından desteklenen format)
+    return `\x1b]8;;${url}\x07${url}\x1b]8;;\x07`;
 }
 
 const commands = {
@@ -227,9 +228,9 @@ const commands = {
                         role: "Software Developer",
                         period: "May 2022 - Present",
                         projects: [
-                            "Kurumsal iş uygulamaları için backend servisleri",
-                            "Mikroservis dönüşüm projesi",
-                            "Yüksek ölçeklenebilir sistemler"
+                            "Backend services for enterprise business applications",
+                            "Microservices transformation project",
+                            "Highly scalable systems"
                         ]
                     },
                     previous_experience: [{
@@ -329,10 +330,10 @@ const commands = {
                         deployment: ["Docker", "Kubernetes", "ArgoCD"]
                     },
                     features: [
-                        "Mikroservis mimarisi",
-                        "Real-time mesajlaşma (WebSocket)",
-                        "Event-driven mimari",
-                        "Cache optimizasyonları"
+                        "Microservice architecture",
+                        "WebSocket",
+                        "Event-driven architecture",
+                        "Cache optimization"
                     ]
                 }]
             }, null, 2));
@@ -341,15 +342,14 @@ const commands = {
             writeLine('HTTP/1.1 200 OK');
             writeLine('Content-Type: application/json');
             writeLine('');
-            // JSON'u önce normal string olarak yazdır
             writeLine('{');
             writeLine('  "social_links": {');
-            // Her link için yeni stil
-            writeLine('    "github": "' + '\u001B]8;;https://github.com/ogulcanmunogullari\u0007' + 'https://github.com/ogulcanmunogullari' + '\u001B]8;;\u0007' + '",');
-            writeLine('    "linkedin": "' + '\u001B]8;;https://www.linkedin.com/in/ogulcanmunogullari/\u0007' + 'https://www.linkedin.com/in/ogulcanmunogullari/' + '\u001B]8;;\u0007' + '",');
-            writeLine('    "portfolio": "' + '\u001B]8;;https://ogulcanmunogullari.com\u0007' + 'https://ogulcanmunogullari.com' + '\u001B]8;;\u0007' + '"');
+            // Direkt olarak tıklanabilir link oluştur
+            writeLine(`    "github": "${formatLink('https://github.com/0uz')}",`);
+            writeLine(`    "linkedin": "${formatLink('https://www.linkedin.com/in/oguzhanduymaz/')}",`);
+            writeLine(`    "portfolio": "${formatLink('https://oguzhanduymaz.com')}"`);
             writeLine('  },');
-            writeLine('  "contributions": {');
+            writeLine('  "git": {');
             writeLine('    "total_commits": "1000+",');
             writeLine('    "repos": 27,');
             writeLine('    "languages": ["Java", "Go", "Python"]');
@@ -396,7 +396,7 @@ const commands = {
     'git': async (args) => {
         if (args[0] === 'log') {
             writeLine('commit a1b2c3d4e5f6g7h8i9j0 (HEAD -> main)');
-            writeLine('Author: Ogulcan Munogullari <backend@dev.com>');
+            writeLine('Author: Oğuzhan Duymaz <o.duymaz146@gmail.com>');
             writeLine('Date:   Wed Jan 15 12:00:00 2024 +0300');
             writeLine('');
             writeLine('    feat(user-service): implement websocket integration');
@@ -405,7 +405,7 @@ const commands = {
             writeLine('    - Add authentication middleware');
             writeLine('');
             writeLine('commit b2c3d4e5f6g7h8i9j0k1');
-            writeLine('Author: Ogulcan Munogullari <backend@dev.com>');
+            writeLine('Author: Ogulcan Munogullari <o.duymaz146@gmail.com>');
             writeLine('Date:   Tue Jan 14 15:30:00 2024 +0300');
             writeLine('');
             writeLine('    feat(auth): implement JWT authentication');

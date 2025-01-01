@@ -504,3 +504,73 @@ function findCommonPrefix(strings) {
     }
     return prefix;
 }
+
+function updateMobileCommands() {
+    const mobileCommands = document.getElementById('mobile-commands');
+    if (!mobileCommands) return;
+
+    mobileCommands.innerHTML = '';
+    const currentInput = terminalState.currentLine.trim().toLowerCase();
+
+    let buttons = [];
+    
+    if (currentInput.startsWith('curl')) {
+        buttons = [
+            'localhost:8080/api/profile',
+            'localhost:8080/api/experience',
+            'localhost:8080/api/projects',
+            'localhost:8080/api/links'
+        ];
+    } else if (currentInput.startsWith('docker')) {
+        buttons = [
+            'ps',
+            'run -d springapp',
+            'run -d goapp',
+            'compose up'
+        ];
+    } else {
+        buttons = [
+            'help',
+            'clear',
+            'curl localhost:8080/api/profile',
+            'docker ps'
+        ];
+    }
+
+    buttons.forEach(cmd => {
+        const button = document.createElement('button');
+        button.textContent = cmd;
+        button.onclick = () => {
+            terminalState.currentLine = currentInput.split(' ')[0] + ' ' + cmd;
+            refreshLine();
+            executeCommand(terminalState.currentLine);
+        };
+        mobileCommands.appendChild(button);
+    });
+}
+
+function executeCommand(command) {
+    term.write('\r\n');
+    const [cmd, ...args] = command.trim().toLowerCase().split(' ');
+    
+    if (commands.hasOwnProperty(cmd)) {
+        try {
+            Promise.resolve(commands[cmd](args)).finally(() => {
+                term.write('\r\n' + terminalState.prompt);
+                updateMobileCommands();
+            });
+        } catch (error) {
+            writeLine('Error executing command: ' + error);
+            term.write(terminalState.prompt);
+            updateMobileCommands();
+        }
+    } else {
+        writeLine(`Command not found: ${cmd}`);
+        writeLine('Type "help" for available commands');
+        term.write(terminalState.prompt);
+        updateMobileCommands();
+    }
+    
+    terminalState.currentLine = '';
+    terminalState.cursorPosition = 0;
+}

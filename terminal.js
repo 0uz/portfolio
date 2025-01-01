@@ -49,6 +49,7 @@ function clearCurrentLine() {
 function refreshLine() {
     clearCurrentLine();
     term.write(terminalState.prompt + terminalState.currentLine);
+    // Cursor pozisyonunu doğru konuma getir
     if (terminalState.currentLine.length > terminalState.cursorPosition) {
         const moveBack = terminalState.currentLine.length - terminalState.cursorPosition;
         term.write('\x1b[' + moveBack + 'D');
@@ -115,8 +116,8 @@ term.onKey(({ key, domEvent }) => {
         }
     }
     else if (ev.keyCode === 13) { // Enter
-        term.write('\r\n');
         const command = terminalState.currentLine.trim();
+        term.write('\r\n');
         
         if (command) {
             addToHistory(command);
@@ -125,18 +126,19 @@ term.onKey(({ key, domEvent }) => {
             if (commands.hasOwnProperty(cmd)) {
                 try {
                     Promise.resolve(commands[cmd](args)).finally(() => {
-                        terminalState.currentLine = '';
-                        terminalState.cursorPosition = 0;
                         term.write('\r\n' + terminalState.prompt);
+                        updateMobileCommands(); // Komutları güncelle
                     });
                 } catch (error) {
                     writeLine('Error executing command: ' + error);
                     term.write(terminalState.prompt);
+                    updateMobileCommands();
                 }
             } else {
                 writeLine(`Command not found: ${cmd}`);
                 writeLine('Type "help" for available commands');
                 term.write(terminalState.prompt);
+                updateMobileCommands();
             }
         } else {
             term.write(terminalState.prompt);
@@ -192,5 +194,6 @@ term.onKey(({ key, domEvent }) => {
             terminalState.currentLine.slice(terminalState.cursorPosition);
         terminalState.cursorPosition++;
         refreshLine();
+        updateMobileCommands(); // Her karakter girişinde komutları güncelle
     }
 });

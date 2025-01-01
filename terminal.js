@@ -40,18 +40,27 @@ function addToHistory(command) {
     }
 }
 
-// Hoş geldin mesajı
+// Hoş geldin mesajı ve otomatik başlatma
 writeLine('\x1b[1m\x1b[38;5;205m' + 
-    '    ____             __                __   ____            __  /__    _ __\n' +
-    '   / __ )____ ______/ /_____  ____  __/ /  / __ \\___  ____/ /_/ __\\  (_) /_\n' +
-    '  / __  / __/ / ___/ //_/ _ \\/ __ \\/ / /  / /_/ / _ \\/ __  / / / /  / / __/\n' +
-    ' / /_/ / /_/ / /__/ ,< /  __/ / / / / /  / ____/  __/ /_/ / / / /  / / /_\n' +
-    '/_____/\\__,_/\\___/_/|_|\\___/_/ /_/_/_/  /_/    \\___/\\__,_/_//_/  /_/\\__/\x1b[0m'
+    '  ____             _                  _    ___  _    _ ______\n' +
+    ' |  _ \\           | |                | |  / _ \\| |  | |___  /\n' +
+    ' | |_) | __ _  ___| | _____ _ __   __| | | | | | |  | |  / / \n' +
+    ' |  _ < / _` |/ __| |/ / _ \\ \'_ \\ / _` | | | | | |  | | / /  \n' +
+    ' | |_) | (_| | (__|   <  __/ | | | (_| | | |_| | |__| |/ /__ \n' +
+    ' |____/ \\__,_|\\___|_|\\_\\___|_| |_|\\__,_|  \\___/ \\____//_____|\n' +
+    '                                                             \n' +
+    '                                                             \x1b[0m'
 );
 writeLine('');
 writeLine('\x1b[1m\x1b[38;5;81mBackend Developer Terminal v2.0.0 - Type "help" for available commands\x1b[0m');
 writeLine('');
 term.write(terminalState.prompt);
+
+// Otomatik olarak infrastructure containerları başlat
+setTimeout(() => {
+    writeLine('docker compose up -d');
+    commands.docker(['compose', 'up']); // Bu komut şimdi otomatik olarak springapp'i de başlatacak
+}, 200);
 
 // Klavye olaylarını dinle
 term.onKey(({ key, domEvent }) => {

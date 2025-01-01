@@ -1,16 +1,16 @@
+let runningApps = {
+    springBoot: false,
+    goApp: false,
+    infrastructure: false
+};
+
 const commandCompletions = {
-    'curl': [
-        'localhost:8080/api/profile',
-        'localhost:8080/api/experience',
-        'localhost:8080/api/projects',
-        'localhost:8080/api/links',
-        'localhost:8080/actuator/health'
-    ],
-    'docker': ['ps', 'logs user-service'],
-    'kubectl': ['get pods', 'describe deployment user-service'],
-    'redis-cli': ['info', 'get user:achievements'],
-    'ls': ['-la', '-l'],
-    'cd': ['projects/', 'config/']
+    'curl': ['localhost:8080/api/profile', 'localhost:8080/api/experience', 'localhost:8080/api/projects', 'localhost:8080/api/links'],
+    'docker': ['run -d springapp', 'run -d goapp', 'ps'],
+    'psql': ['-h localhost -U postgres -d portfolio'],
+    'redis-cli': ['ping', 'monitor', 'info'],
+    'kafka-topics': ['--list'],
+    'git': ['log', 'status']
 };
 
 const fileSystem = {
@@ -39,68 +39,183 @@ const fileSystem = {
 
 let currentDirectory = '/';
 
-const commands = {
-    help: () => {
-        writeLine('\x1b[1m\x1b[38;5;81mKullanılabilir Komutlar:\x1b[0m');
-        writeLine('');
-        writeLine('\x1b[1m\x1b[38;5;214mSystem Commands:\x1b[0m');
-        writeLine('    clear                   Terminal ekranını temizler');
-        writeLine('    help                    Bu yardım mesajını gösterir');
-        writeLine('');
-        writeLine('\x1b[1m\x1b[38;5;214mProfile & Links:\x1b[0m');
-        writeLine('    curl localhost:8080/api/profile    CV ve profil bilgileri');
-        writeLine('    curl localhost:8080/api/experience İş deneyimleri');
-        writeLine('    curl localhost:8080/api/projects   Proje detayları');
-        writeLine('    curl localhost:8080/api/links      GitHub ve LinkedIn profilleri');
-        writeLine('');
-        writeLine('\x1b[1m\x1b[38;5;214mTech Stack Demo:\x1b[0m');
-        writeLine('    docker ps/logs          Container ve uygulama durumu');
-        writeLine('    kubectl get pods        Kubernetes deployment detayları');
-        writeLine('    redis-cli get          Başarılar ve sertifikalar');
-        return Promise.resolve();
-    },
+// Yardımcı fonksiyonlar
+function getCurrentTimestamp(addSeconds = 0) {
+    const now = new Date();
+    now.setSeconds(now.getSeconds() + addSeconds);
+    return now.toLocaleString('tr-TR', {
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+        fractionalSecondDigits: 3
+    }).replace(',', '');
+}
 
-    'kubectl': async (args) => {
-        if (args[0] === 'get' && args[1] === 'pods') {
-            await simulateLoading('Fetching pods ');
-            writeLine('NAME                                     READY   STATUS    RESTARTS   AGE');
-            writeLine('user-service-7d4f79f4b9-x2jl8           1/1     Running   0          2d');
-            writeLine('auth-service-5c6b7d8f9a-k3m4n           1/1     Running   0          2d');
-            writeLine('notification-service-3f4g5h6j7-w8x9y    1/1     Running   0          2d');
-            writeLine('redis-master-0                          1/1     Running   0          5d');
-            writeLine('kafka-0                                 1/1     Running   0          5d');
-        } else if (args[0] === 'logs') {
-            await simulateLoading('Fetching logs ');
-            writeLine('2024-01-15 10:23:45.123  INFO 1 --- [main] c.s.UserServiceApplication : Starting UserServiceApplication');
-            writeLine('2024-01-15 10:23:46.234  INFO 1 --- [main] o.s.b.w.embedded.tomcat.TomcatWebServer : Tomcat initialized');
-            writeLine('2024-01-15 10:23:47.345  INFO 1 --- [main] o.s.b.a.e.web.EndpointLinksResolver : Exposing 13 endpoint(s)');
-        } else if (args[0] === 'describe' && args[1] === 'deployment' && args[2] === 'user-service') {
-            writeLine('Name:                   user-service');
-            writeLine('Namespace:              production');
-            writeLine('CreationTimestamp:      Mon, 15 Jan 2024 10:23:45 +0300');
-            writeLine('Labels:                 app=user-service');
-            writeLine('                       team=backend');
-            writeLine('Annotations:            deployment.kubernetes.io/revision: 3');
-            writeLine('Replicas:               3 desired | 3 updated | 3 total | 3 available');
-            writeLine('Strategy:               RollingUpdate');
-            writeLine('  Max surge:            1');
-            writeLine('  Max unavailable:      0');
-            writeLine('Pod template:');
-            writeLine('  Labels:               app=user-service');
-            writeLine('  Containers:');
-            writeLine('   user-service:');
-            writeLine('    Image:              registry.company.com/user-service:1.2.3');
-            writeLine('    Ports:              8080/TCP, 8081/TCP');
-            writeLine('    Environment:');
-            writeLine('      SPRING_PROFILES_ACTIVE:  production');
-            writeLine('      JAVA_OPTS:               -Xms512m -Xmx1024m');
+function getCurrentDate() {
+    return new Date().toLocaleDateString('tr-TR', {
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit'
+    });
+}
+
+// Link formatlamak için yardımcı fonksiyon
+function formatLink(url) {
+    return `\x1b]8;;${url}\x1b\\${url}\x1b]8;;\x1b\\`;
+}
+
+const commands = {
+    'docker': async (args) => {
+        if (args[0] === 'compose' && args[1] === 'up') {
+            if (runningApps.infrastructure) {
+                writeLine('Infrastructure is already running.\n');
+                term.write(terminalState.prompt);
+                return;
+            }
+            
+            writeLine('Starting infrastructure containers...');
+            await simulateLoading('Creating network "portfolio_default" ', 500);
+            await new Promise(r => setTimeout(r, 300));
+            
+            writeLine('\nStarting postgresql...');
+            await simulateLoading('Creating container ', 700);
+            writeLine(`c3d4e5f6g7h8   | PostgreSQL Database starting`);
+            writeLine(`c3d4e5f6g7h8   | PostgreSQL init process complete; ready for start up.`);
+            writeLine(`c3d4e5f6g7h8   | ${getCurrentTimestamp()} UTC [1] LOG:  database system is ready to accept connections`);
+            
+            await new Promise(r => setTimeout(r, 500));
+            writeLine('\nStarting redis...');
+            await simulateLoading('Creating container ', 600);
+            writeLine(`d4e5f6g7h8i9   | ${getCurrentTimestamp(1)} * Ready to accept connections`);
+            
+            await new Promise(r => setTimeout(r, 500));
+            writeLine('\nStarting kafka...');
+            await simulateLoading('Creating container ', 800);
+            writeLine(`e5f6g7h8i9j0   | [${getCurrentTimestamp(2)}] INFO Kafka Server started`);
+            
+            writeLine('\n\x1b[32mInfrastructure containers are ready\x1b[0m\n');
+            runningApps.infrastructure = true;
+            
+            // Otomatik olarak Spring Boot uygulamasını başlat
+            writeLine('docker run -d springapp');
+            await commands.docker(['run', '-d', 'springapp']);
+            return;
+        }
+
+        if (args[0] === 'run' && args[1] === '-d') {
+            if (!runningApps.infrastructure) {
+                writeLine('\x1b[31mError: Infrastructure containers are not running. Please run:');
+                writeLine('docker compose up\x1b[0m');
+                return;
+            }
+
+            if (args[2] === 'springapp') {
+                // Spring Boot başlatma çıktılarında timestamp güncelleme
+                const startTime = getCurrentTimestamp();
+                writeLine('Creating Spring Boot container...');
+                await simulateLoading('Starting container ', 800);
+                writeLine('\n[+] Container created: springapp');
+                await new Promise(r => setTimeout(r, 500));
+                
+                writeLine('\n  .   ____          _            __ _ _');
+                writeLine(' /\\\\ / ___\'_ __ _ _(_)_ __  __ _ \\ \\ \\ \\');
+                writeLine('( ( )\\___ | \'_ | \'_| | \'_ \\/ _` | \\ \\ \\ \\');
+                writeLine(' \\\\/  ___)| |_)| | | | | || (_| |  ) ) ) )');
+                writeLine('  \'  |____| .__|_| |_|_| |_\\__, | / / / /');
+                writeLine(' =========|_|==============|___/=/_/_/_/');
+                writeLine(' :: Spring Boot ::                (v3.4.1)');
+                await new Promise(r => setTimeout(r, 1000));
+
+                writeLine(`\n${getCurrentTimestamp()}  INFO 1 --- [           main] c.s.UserServiceApplication               : Starting UserServiceApplication v1.0.0`);
+                await new Promise(r => setTimeout(r, 300));
+                writeLine(`${getCurrentTimestamp()}  INFO 1 --- [           main] c.s.UserServiceApplication               : No active profile set, falling back to 1 default profile: "default"`);
+                await new Promise(r => setTimeout(r, 700));
+                writeLine(`${getCurrentTimestamp()}  INFO 1 --- [           main] .s.d.r.c.RepositoryConfigurationDelegate : Bootstrapping Spring Data JPA repositories in DEFAULT mode.`);
+                await new Promise(r => setTimeout(r, 400));
+                writeLine(`${getCurrentTimestamp()}  INFO 1 --- [           main] .s.d.r.c.RepositoryConfigurationDelegate : Finished Spring Data repository scanning in 123 ms. Found 5 JPA repository interfaces.`);
+                await new Promise(r => setTimeout(r, 600));
+                writeLine(`${getCurrentTimestamp()}  INFO 1 --- [           main] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat initialized with port(s): 8080 (http)`);
+                await new Promise(r => setTimeout(r, 300));
+                writeLine(`${getCurrentTimestamp()}  INFO 1 --- [           main] o.apache.catalina.core.StandardService   : Starting service [Tomcat]`);
+                await new Promise(r => setTimeout(r, 400));
+                writeLine(`${getCurrentTimestamp()}  INFO 1 --- [           main] o.s.s.web.DefaultSecurityFilterChain     : Will secure any request with [org.springframework.security.web.session.DisableEncodeUrlFilter@...]`);
+                await new Promise(r => setTimeout(r, 500));
+                writeLine(`${getCurrentTimestamp()}  INFO 1 --- [           main] o.s.b.a.e.web.EndpointLinksResolver      : Exposing 13 endpoint(s) beneath base path \'/actuator\'`);
+                await new Promise(r => setTimeout(r, 300));
+                writeLine(`${getCurrentTimestamp()}  INFO 1 --- [           main] c.s.UserServiceApplication               : Started UserServiceApplication in 3.666 seconds (JVM running for 4.142)`);
+                
+                writeLine('\n\x1b[32mContainer springapp is now running\x1b[0m\n');
+                runningApps.springBoot = true;
+                term.write(terminalState.prompt);
+                return;
+            }
+
+            if (args[2] === 'goapp') {
+                // Go API başlatma çıktılarında timestamp güncelleme
+                const startTime = getCurrentTimestamp();
+                writeLine('Creating Go API container...');
+                await simulateLoading('Starting container ', 800);
+                writeLine('\n[+] Container created: goapp');
+                await new Promise(r => setTimeout(r, 500));
+
+                writeLine(`\n${getCurrentDate()} ${getCurrentTimestamp()} INFO Starting API server...`);
+                await new Promise(r => setTimeout(r, 300));
+                writeLine(`${getCurrentTimestamp()} DEBUG Loading config from environment`);
+                await new Promise(r => setTimeout(r, 400));
+                writeLine(`${getCurrentTimestamp()} INFO Establishing database connection`);
+                await new Promise(r => setTimeout(r, 600));
+                writeLine(`${getCurrentTimestamp()} DEBUG Database connection pool established`);
+                await new Promise(r => setTimeout(r, 300));
+                writeLine(`${getCurrentTimestamp()} INFO Initializing HTTP router`);
+                await new Promise(r => setTimeout(r, 400));
+                writeLine(`${getCurrentTimestamp()} DEBUG Registered handler: /api/v1/profile`);
+                writeLine(`${getCurrentTimestamp()} DEBUG Registered handler: /api/v1/experience`);
+                writeLine(`${getCurrentTimestamp()} DEBUG Registered handler: /api/v1/projects`);
+                writeLine(`${getCurrentTimestamp()} DEBUG Registered handler: /api/v1/links`);
+                await new Promise(r => setTimeout(r, 500));
+                writeLine(`${getCurrentTimestamp()} INFO Starting metrics collector`);
+                await new Promise(r => setTimeout(r, 300));
+                writeLine(`${getCurrentTimestamp()} INFO Server is running on :8081`);
+                writeLine(`${getCurrentTimestamp()} INFO Health check endpoint: http://localhost:8081/health`);
+                
+                writeLine('\n\x1b[32mContainer goapp is now running\x1b[0m');
+                runningApps.goApp = true;
+                return;
+            }
+        }
+        
+        if (args[0] === 'ps') {
+            writeLine('CONTAINER ID   IMAGE                         STATUS          PORTS');
+            if (runningApps.springBoot) {
+                writeLine('a1b2c3d4e5f6   springapp:latest            Up 2 minutes     0.0.0.0:8080->8080/tcp');
+            }
+            if (runningApps.goApp) {
+                writeLine('b2c3d4e5f6g7   goapp:latest               Up 1 minute      0.0.0.0:8081->8081/tcp');
+            }
+            if (runningApps.infrastructure) {
+                writeLine('c3d4e5f6g7h8   postgres:13                Up 10 minutes    0.0.0.0:5432->5432/tcp');
+                writeLine('d4e5f6g7h8i9   redis:latest               Up 10 minutes    0.0.0.0:6379->6379/tcp');
+                writeLine('e5f6g7h8i9j0   kafka:latest               Up 10 minutes    0.0.0.0:9092->9092/tcp');
+            }
+            return;
         }
     },
 
     'curl': async (args) => {
+        const endpoint = args.join(' ');
+        if (!runningApps.springBoot && !runningApps.goApp) {
+            writeLine('\x1b[31mError: No running applications found. Start an app using:');
+            writeLine('docker run -d springapp');
+            writeLine('docker run -d goapp\x1b[0m');
+            return;
+        }
+
         await simulateLoading('Sending request ', 800);
-        if (args.includes('localhost:8080/api/profile')) {
-            await simulateLoading('Fetching profile data ', 500);
+        if (endpoint.includes('/api/profile')) {
+            await simulateLoading('Fetching profile ', 600);
             writeLine('HTTP/1.1 200 OK');
             writeLine('Content-Type: application/json');
             writeLine('');
@@ -137,8 +252,8 @@ const commands = {
                     }
                 }
             }, null, 2));
-        } else if (args.includes('localhost:8080/api/experience')) {
-            await simulateLoading('Fetching experience data ', 600);
+        } else if (endpoint.includes('/api/experience')) {
+            await simulateLoading('Fetching experience ', 500);
             writeLine('HTTP/1.1 200 OK');
             writeLine('Content-Type: application/json');
             writeLine('');
@@ -164,7 +279,7 @@ const commands = {
                     focus: ["Java Development", "Unit Testing", "Team Collaboration"]
                 }]
             }, null, 2));
-        } else if (args.includes('api/health')) {
+        } else if (endpoint.includes('api/health')) {
             writeLine('HTTP/1.1 200 OK');
             writeLine('Content-Type: application/json');
             writeLine('');
@@ -176,7 +291,7 @@ const commands = {
                     kafka: { status: "UP" }
                 }
             }, null, 2));
-        } else if (args.includes('api/metrics')) {
+        } else if (endpoint.includes('api/metrics')) {
             writeLine('HTTP/1.1 200 OK');
             writeLine('Content-Type: application/json');
             writeLine('');
@@ -186,7 +301,7 @@ const commands = {
                 "system.cpu.usage": 0.65,
                 "hikaricp.connections.active": 12
             }, null, 2));
-        } else if (args.includes('localhost:8080/actuator/health')) {
+        } else if (endpoint.includes('localhost:8080/actuator/health')) {
             writeLine('HTTP/1.1 200 OK');
             writeLine('Content-Type: application/json');
             writeLine('');
@@ -199,7 +314,7 @@ const commands = {
                     "kafka": { status: "UP", details: { brokers: ["kafka-1", "kafka-2"] }}
                 }
             }, null, 2));
-        } else if (args.includes('localhost:8080/api/projects')) {
+        } else if (endpoint.includes('localhost:8080/api/projects')) {
             await simulateLoading('Fetching project data ', 600);
             writeLine('HTTP/1.1 200 OK');
             writeLine('Content-Type: application/json');
@@ -221,69 +336,82 @@ const commands = {
                     ]
                 }]
             }, null, 2));
-        } else if (args.includes('localhost:8080/api/links')) {
+        } else if (endpoint.includes('localhost:8080/api/links')) {
             await simulateLoading('Fetching social links ', 400);
             writeLine('HTTP/1.1 200 OK');
             writeLine('Content-Type: application/json');
             writeLine('');
-            writeLine(JSON.stringify({
-                social_links: {
-                    github: "https://github.com/ogulcanmunogullari",
-                    linkedin: "https://www.linkedin.com/in/ogulcanmunogullari/",
-                    portfolio: "https://ogulcanmunogullari.com"
-                },
-                contributions: {
-                    total_commits: "1000+",
-                    public_repos: 25,
-                    languages: ["Java", "JavaScript", "Go", "Python"]
-                }
-            }, null, 2));
+            // JSON'u önce normal string olarak yazdır
+            writeLine('{');
+            writeLine('  "social_links": {');
+            // Her link için yeni stil
+            writeLine('    "github": "' + '\u001B]8;;https://github.com/ogulcanmunogullari\u0007' + 'https://github.com/ogulcanmunogullari' + '\u001B]8;;\u0007' + '",');
+            writeLine('    "linkedin": "' + '\u001B]8;;https://www.linkedin.com/in/ogulcanmunogullari/\u0007' + 'https://www.linkedin.com/in/ogulcanmunogullari/' + '\u001B]8;;\u0007' + '",');
+            writeLine('    "portfolio": "' + '\u001B]8;;https://ogulcanmunogullari.com\u0007' + 'https://ogulcanmunogullari.com' + '\u001B]8;;\u0007' + '"');
+            writeLine('  },');
+            writeLine('  "contributions": {');
+            writeLine('    "total_commits": "1000+",');
+            writeLine('    "repos": 27,');
+            writeLine('    "languages": ["Java", "Go", "Python"]');
+            writeLine('  }');
+            writeLine('}');
         }
     },
 
-    'docker': async (args) => {
-        await simulateLoading('Connecting to docker daemon ', 1000);
-        if (args[0] === 'ps') {
-            await simulateLoading('Fetching containers ', 800);
-            writeLine('CONTAINER ID   IMAGE                         COMMAND                  CREATED          STATUS          PORTS                    NAMES');
-            writeLine('a1b2c3d4e5f6   user-service:latest           "java -jar app.jar"      2 days ago       Up 2 days       0.0.0.0:8080->8080/tcp   user-service');
-            writeLine('b2c3d4e5f6g7   auth-service:latest           "java -jar app.jar"      2 days ago       Up 2 days       0.0.0.0:8081->8081/tcp   auth-service');
-        } else if (args[0] === 'logs') {
-            await simulateLoading('Fetching logs ', 800);
-            writeLine('2024-01-15 10:23:45.123  INFO 1 --- [main] c.s.UserServiceApplication : Starting UserServiceApplication');
-            writeLine('2024-01-15 10:23:46.234  INFO 1 --- [main] o.s.b.w.embedded.tomcat.TomcatWebServer : Tomcat initialized');
-            writeLine('2024-01-15 10:23:47.345  INFO 1 --- [main] o.s.b.a.e.web.EndpointLinksResolver : Exposing 13 endpoint(s)');
-        }
+    'psql': async (args) => {
+        writeLine('psql (14.9)');
+        writeLine('Type "help" for help.');
+        writeLine('');
+        writeLine('portfolio=# SELECT * FROM projects;');
+        writeLine(' id |          name           |        tech_stack         |     description     ');
+        writeLine('----+-------------------------+-------------------------+--------------------');
+        writeLine('  1 | Social Platform Backend | Spring Boot, PostgreSQL | Microservice arch');
+        writeLine('  2 | WebSocket Service      | Go, Redis              | Real-time messaging');
+        writeLine('(2 rows)');
+        writeLine('');
+        writeLine('portfolio=# ');
     },
 
     'redis-cli': async (args) => {
-        await simulateLoading('Connecting to Redis ', 500);
-        if (args[0] === 'info') {
+        if (args[0] === 'ping') {
+            writeLine('PONG');
+        } else if (args[0] === 'monitor') {
+            writeLine('OK');
+            writeLine('1705312345.123456 [0 172.18.0.3:50302] "GET" "session:123"');
+        } else if (args[0] === 'info') {
             writeLine('# Server');
             writeLine('redis_version:6.2.6');
             writeLine('redis_mode:standalone');
-            writeLine('# Clients');
-            writeLine('connected_clients:123');
-            writeLine('# Memory');
-            writeLine('used_memory_human:1.23G');
-            writeLine('used_memory_peak_human:1.5G');
-        } else if (args[0] === 'monitor') {
-            writeLine('OK');
-            writeLine('1705312345.123456 [0 172.18.0.3:50302] "GET" "user:session:123"');
-            writeLine('1705312346.123456 [0 172.18.0.3:50302] "HGET" "user:preferences:456" "theme"');
-        } else if (args[0] === 'get' && args[1] === 'user:achievements') {
-            writeLine(JSON.stringify({
-                academic: {
-                    department_rank: 1,
-                    faculty_rank: 3,
-                    gpa: 3.33
-                },
-                professional: {
-                    hackathon_rank: 7,
-                    total_participants: 1350,
-                    result: "Job offer from Sahibinden.com"
-                }
-            }, null, 2));
+        }
+    },
+
+    'kafka-topics': async (args) => {
+        if (args.includes('--list')) {
+            writeLine('user-events');
+            writeLine('notification-events');
+            writeLine('payment-events');
+        }
+    },
+
+    'git': async (args) => {
+        if (args[0] === 'log') {
+            writeLine('commit a1b2c3d4e5f6g7h8i9j0 (HEAD -> main)');
+            writeLine('Author: Ogulcan Munogullari <backend@dev.com>');
+            writeLine('Date:   Wed Jan 15 12:00:00 2024 +0300');
+            writeLine('');
+            writeLine('    feat(user-service): implement websocket integration');
+            writeLine('    - Add real-time messaging support');
+            writeLine('    - Integrate Redis for presence tracking');
+            writeLine('    - Add authentication middleware');
+            writeLine('');
+            writeLine('commit b2c3d4e5f6g7h8i9j0k1');
+            writeLine('Author: Ogulcan Munogullari <backend@dev.com>');
+            writeLine('Date:   Tue Jan 14 15:30:00 2024 +0300');
+            writeLine('');
+            writeLine('    feat(auth): implement JWT authentication');
+            writeLine('    - Add Spring Security configuration');
+            writeLine('    - Implement user authentication flow');
+            writeLine('    - Add token validation middleware');
         }
     },
 
@@ -292,44 +420,27 @@ const commands = {
         term.write('\x1b[H');
     },
 
-    'pwd': () => {
-        writeLine(`/home/backend${currentDirectory}`);
-    },
-
-    'ls': async (args) => {
-        await simulateLoading('Reading directory ', 300);
-        if (args.includes('-l') || args.includes('-la')) {
-            writeLine('total 84');
-            writeLine('drwxr-xr-x  12 backend dev  4096 Jan 15 10:00 projects/');
-            writeLine('drwxr-xr-x   8 backend dev  4096 Jan 15 10:00 config/');
-            writeLine('-rw-r--r--   1 backend dev  2300 Jan 15 10:00 docker-compose.yml');
-            writeLine('-rw-r--r--   1 backend dev  1250 Jan 15 10:00 README.md');
-        } else {
-            writeLine('projects/  config/  docker-compose.yml  README.md');
-        }
-    },
-
-    'cd': (args) => {
-        if (!args[0] || args[0] === '~') {
-            currentDirectory = '/';
-        } else {
-            currentDirectory = args[0];
-        }
+    help: () => {
+        writeLine('\x1b[1m\x1b[38;5;81mAvailable Commands:\x1b[0m');
+        writeLine('');
+        writeLine('\x1b[1m\x1b[38;5;214mApplication Control:\x1b[0m');
+        writeLine('    docker run -d springapp    Start Spring Boot application');
+        writeLine('    docker run -d goapp       Start Go WebSocket server');
+        writeLine('    docker ps                 List running containers');
+        writeLine('');
+        writeLine('\x1b[1m\x1b[38;5;214mAPI Endpoints:\x1b[0m');
+        writeLine('    curl localhost:8080/api/profile    Show CV and profile');
+        writeLine('    curl localhost:8080/api/experience Show work experience');
+        writeLine('    curl localhost:8080/api/projects   Show project details');
+        writeLine('    curl localhost:8080/api/links      Show social links');
+        writeLine('');
+        writeLine('\x1b[1m\x1b[38;5;214mOther Tools:\x1b[0m');
+        writeLine('    psql -h localhost         List projects from database');
+        writeLine('    redis-cli                 Interactive Redis client');
+        writeLine('    kafka-topics --list       Show Kafka topics');
+        writeLine('    git log                   Show development history');
+        writeLine('    clear                     Clear terminal screen');
         return Promise.resolve();
-    },
-
-    'spring': async (args) => {
-        if (args[0] === 'init') {
-            await simulateLoading('Creating Spring Boot project ', 1000);
-            writeLine('Project created with dependencies:');
-            writeLine('- Spring Web');
-            writeLine('- Spring Data JPA');
-            writeLine('- Spring Security');
-            writeLine('- Spring Cache');
-            writeLine('- PostgreSQL Driver');
-            writeLine('- Kafka');
-            writeLine('- Actuator');
-        }
     }
 };
 

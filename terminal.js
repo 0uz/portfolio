@@ -12,12 +12,27 @@ const terminalState = {
 // Terminal container'a bağla
 term.open(document.getElementById('terminal-container'));
 
-// Terminal boyutunu ayarla
+// Terminal boyutunu ayarla fonksiyonunu güncelle
 function updateTerminalSize() {
+    const width = window.innerWidth;
+    const height = window.innerHeight;
+
+    // Mobil cihazlar için font boyutunu ayarla
+    let fontSize = 14;
+    if (width <= 480) {
+        fontSize = 12;
+    } else if (width <= 768) {
+        fontSize = 13;
+    }
+
+    // Margin ve padding'leri hesaba kat
+    const margin = width <= 480 ? 10 : (width <= 768 ? 20 : 30);
     const dims = {
-        cols: Math.floor((window.innerWidth - 120) / 9),
-        rows: Math.floor((window.innerHeight - 120) / 20)
+        cols: Math.floor((width - (margin * 2)) / (fontSize * 0.6)),
+        rows: Math.floor((height - (margin * 2)) / (fontSize * 1.2))
     };
+
+    term.options.fontSize = fontSize;
     term.resize(dims.cols, dims.rows);
 }
 
@@ -49,17 +64,31 @@ function addToHistory(command) {
     }
 }
 
+// ASCII art ve başlık için fonksiyon
+function getWelcomeMessage() {
+    const width = window.innerWidth;
+    if (width <= 768) {
+        // Mobil cihazlar için basit başlık
+        return '\x1b[1m\x1b[38;5;205m' + 
+            '╔═══════════════════╗\n' +
+            '║  Backend OUZ      ║\n' +
+            '╚═══════════════════╝\x1b[0m';
+    }
+    
+    // Desktop için tam ASCII art
+    return '\x1b[1m\x1b[38;5;205m' + 
+        '  ____             _                  _    ___  _    _ ______\n' +
+        ' |  _ \\           | |                | |  / _ \\| |  | |___  /\n' +
+        ' | |_) | __ _  ___| | _____ _ __   __| | | | | | |  | |  / / \n' +
+        ' |  _ < / _` |/ __| |/ / _ \\ \'_ \\ / _` | | | | | |  | | / /  \n' +
+        ' | |_) | (_| | (__|   <  __/ | | | (_| | | |_| | |__| |/ /__ \n' +
+        ' |____/ \\__,_|\\___|_|\\_\\___|_| |_|\\__,_|  \\___/ \\____//_____|\n' +
+        '                                                             \n' +
+        '                                                             \x1b[0m';
+}
+
 // Hoş geldin mesajı ve otomatik başlatma
-writeLine('\x1b[1m\x1b[38;5;205m' + 
-    '  ____             _                  _    ___  _    _ ______\n' +
-    ' |  _ \\           | |                | |  / _ \\| |  | |___  /\n' +
-    ' | |_) | __ _  ___| | _____ _ __   __| | | | | | |  | |  / / \n' +
-    ' |  _ < / _` |/ __| |/ / _ \\ \'_ \\ / _` | | | | | |  | | / /  \n' +
-    ' | |_) | (_| | (__|   <  __/ | | | (_| | | |_| | |__| |/ /__ \n' +
-    ' |____/ \\__,_|\\___|_|\\_\\___|_| |_|\\__,_|  \\___/ \\____//_____|\n' +
-    '                                                             \n' +
-    '                                                             \x1b[0m'
-);
+writeLine(getWelcomeMessage());
 writeLine('');
 writeLine('\x1b[1m\x1b[38;5;81mBackend Developer Terminal v2.0.0 - Type "help" for available commands\x1b[0m');
 writeLine('');

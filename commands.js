@@ -78,23 +78,23 @@ const commands = {
             }
             
             writeLine('Starting infrastructure containers...');
-            await simulateLoading('Creating network "portfolio_default" ', 500);
+            await simulateLoading('Creating network "portfolio_default" ', 300);
             await new Promise(r => setTimeout(r, 300));
             
             writeLine('\nStarting postgresql...');
-            await simulateLoading('Creating container ', 700);
+            await simulateLoading('Creating container ', 500);
             writeLine(`c3d4e5f6g7h8   | PostgreSQL Database starting`);
             writeLine(`c3d4e5f6g7h8   | PostgreSQL init process complete; ready for start up.`);
             writeLine(`c3d4e5f6g7h8   | ${getCurrentTimestamp()} UTC [1] LOG:  database system is ready to accept connections`);
             
-            await new Promise(r => setTimeout(r, 500));
+            await new Promise(r => setTimeout(r, 300));
             writeLine('\nStarting redis...');
-            await simulateLoading('Creating container ', 600);
+            await simulateLoading('Creating container ', 400);
             writeLine(`d4e5f6g7h8i9   | ${getCurrentTimestamp(1)} * Ready to accept connections`);
             
-            await new Promise(r => setTimeout(r, 500));
+            await new Promise(r => setTimeout(r, 300));
             writeLine('\nStarting kafka...');
-            await simulateLoading('Creating container ', 800);
+            await simulateLoading('Creating container ', 500);
             writeLine(`e5f6g7h8i9j0   | [${getCurrentTimestamp(2)}] INFO Kafka Server started`);
             
             writeLine('\n\x1b[32mInfrastructure containers are ready\x1b[0m\n');
@@ -117,7 +117,7 @@ const commands = {
                 // Spring Boot başlatma çıktılarında timestamp güncelleme
                 const startTime = getCurrentTimestamp();
                 writeLine('Creating Spring Boot container...');
-                await simulateLoading('Starting container ', 800);
+                await simulateLoading('Starting container ', 500);
                 writeLine('\n[+] Container created: springapp');
                 await new Promise(r => setTimeout(r, 500));
                 
@@ -128,24 +128,24 @@ const commands = {
                 writeLine('  \'  |____| .__|_| |_|_| |_\\__, | / / / /');
                 writeLine(' =========|_|==============|___/=/_/_/_/');
                 writeLine(' :: Spring Boot ::                (v3.4.1)');
-                await new Promise(r => setTimeout(r, 1000));
+                await new Promise(r => setTimeout(r, 500));
 
                 writeLine(`\n${getCurrentTimestamp()}  INFO 1 --- [           main] c.s.UserServiceApplication               : Starting UserServiceApplication v1.0.0`);
                 await new Promise(r => setTimeout(r, 300));
                 writeLine(`${getCurrentTimestamp()}  INFO 1 --- [           main] c.s.UserServiceApplication               : No active profile set, falling back to 1 default profile: "default"`);
-                await new Promise(r => setTimeout(r, 700));
+                await new Promise(r => setTimeout(r, 500));
                 writeLine(`${getCurrentTimestamp()}  INFO 1 --- [           main] .s.d.r.c.RepositoryConfigurationDelegate : Bootstrapping Spring Data JPA repositories in DEFAULT mode.`);
                 await new Promise(r => setTimeout(r, 400));
                 writeLine(`${getCurrentTimestamp()}  INFO 1 --- [           main] .s.d.r.c.RepositoryConfigurationDelegate : Finished Spring Data repository scanning in 123 ms. Found 5 JPA repository interfaces.`);
-                await new Promise(r => setTimeout(r, 600));
+                await new Promise(r => setTimeout(r, 400));
                 writeLine(`${getCurrentTimestamp()}  INFO 1 --- [           main] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat initialized with port(s): 8080 (http)`);
                 await new Promise(r => setTimeout(r, 300));
                 writeLine(`${getCurrentTimestamp()}  INFO 1 --- [           main] o.apache.catalina.core.StandardService   : Starting service [Tomcat]`);
                 await new Promise(r => setTimeout(r, 400));
                 writeLine(`${getCurrentTimestamp()}  INFO 1 --- [           main] o.s.s.web.DefaultSecurityFilterChain     : Will secure any request with [org.springframework.security.web.session.DisableEncodeUrlFilter@...]`);
-                await new Promise(r => setTimeout(r, 500));
+                await new Promise(r => setTimeout(r, 400));
                 writeLine(`${getCurrentTimestamp()}  INFO 1 --- [           main] o.s.b.a.e.web.EndpointLinksResolver      : Exposing 13 endpoint(s) beneath base path \'/actuator\'`);
-                await new Promise(r => setTimeout(r, 300));
+                await new Promise(r => setTimeout(r, 200));
                 writeLine(`${getCurrentTimestamp()}  INFO 1 --- [           main] c.s.UserServiceApplication               : Started UserServiceApplication in 3.666 seconds (JVM running for 4.142)`);
                 
                 writeLine('\n\x1b[32mContainer springapp is now running\x1b[0m\n');

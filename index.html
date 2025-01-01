@@ -2,7 +2,7 @@
 <html lang="tr">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Interactive Terminal Portfolio</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/xterm@5.3.0/css/xterm.min.css" />
     <link rel="stylesheet" href="styles.css" />
@@ -64,6 +64,37 @@
 
         // Terminal instance'ını oluştur
         createTerminal();
+
+        // Terminal container'a bağla
+        term.open(document.getElementById('terminal-container'));
+
+        // Terminal boyutunu ayarla fonksiyonunu güncelle
+        function updateTerminalSize() {
+            const width = window.innerWidth;
+            const height = window.innerHeight;
+
+            // Mobil cihazlar için font boyutunu ayarla
+            let fontSize = 14;
+            if (width <= 480) {
+                fontSize = 12;
+            } else if (width <= 768) {
+                fontSize = 13;
+            }
+
+            // Margin ve padding'leri hesaba kat
+            const margin = width <= 480 ? 10 : (width <= 768 ? 20 : 30);
+            const dims = {
+                cols: Math.floor((width - (margin * 2)) / (fontSize * 0.6)),
+                rows: Math.floor((height - (margin * 2)) / (fontSize * 1.2))
+            };
+
+            term.options.fontSize = fontSize;
+            term.resize(dims.cols, dims.rows);
+        }
+
+        // Pencere boyutu değiştiğinde terminal boyutunu güncelle
+        window.addEventListener('resize', updateTerminalSize);
+        updateTerminalSize();
     </script>
     <script src="commands.js"></script>
     <script src="terminal.js"></script>

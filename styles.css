@@ -11,7 +11,7 @@ body {
 #terminal-container {
     flex: 1;
     background-color: #000;
-    margin: 30px;
+    margin: 20px;
     border-radius: 8px;
     box-shadow: 0 0 20px rgba(0,0,0,0.7);
     overflow: hidden;
@@ -21,7 +21,7 @@ body {
 
 .terminal {
     height: 100%;
-    padding: 15px;
+    padding: 10px;
 }
 
 .xterm .xterm-viewport {
@@ -30,4 +30,25 @@ body {
 
 .xterm-screen {
     padding: 5px;
+}
+
+/* Responsive styles */
+@media (max-width: 768px) {
+    #terminal-container {
+        margin: 10px;
+    }
+
+    .terminal {
+        padding: 5px;
+    }
+}
+
+@media (max-width: 480px) {
+    #terminal-container {
+        margin: 5px;
+    }
+
+    .xterm-screen {
+        padding: 2px;
+    }
 }

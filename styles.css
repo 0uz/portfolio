@@ -52,3 +52,31 @@ body {
         padding: 2px;
     }
 }
+
+/* Mobil cihazlar için komut butonları */
+.mobile-only {
+    display: none;
+}
+
+@media (max-width: 768px) {
+    .mobile-only {
+        display: flex;
+        justify-content: center;
+        gap: 10px;
+        padding: 10px;
+        background-color: #333;
+    }
+
+    .mobile-only button {
+        background-color: #444;
+        color: #fff;
+        border: none;
+        padding: 10px;
+        border-radius: 5px;
+        cursor: pointer;
+    }
+
+    .mobile-only button:hover {
+        background-color: #555;
+    }
+}

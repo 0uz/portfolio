@@ -10,7 +10,7 @@ const commandCompletions = {
     'psql': ['-h localhost -U postgres -d portfolio'],
     'redis-cli': ['ping', 'monitor', 'info'],
     'kafka-topics': ['--list'],
-    'git': ['log', 'status']
+    'git': ['log']
 };
 
 const fileSystem = {
@@ -405,7 +405,7 @@ const commands = {
             writeLine('    - Add authentication middleware');
             writeLine('');
             writeLine('commit b2c3d4e5f6g7h8i9j0k1');
-            writeLine('Author: Ogulcan Munogullari <o.duymaz146@gmail.com>');
+            writeLine('Author: Oğuzhan Duymaz <o.duymaz146@gmail.com>');
             writeLine('Date:   Tue Jan 14 15:30:00 2024 +0300');
             writeLine('');
             writeLine('    feat(auth): implement JWT authentication');

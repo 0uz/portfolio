@@ -68,6 +68,32 @@ function formatLink(url) {
     return `\x1b]8;;${url}\x07${url}\x1b]8;;\x07`;
 }
 
+// colorizeJson fonksiyonunu güncelle
+function colorizeJson(json) {
+    const jsonString = JSON.stringify(json, null, 2);
+    const lines = jsonString.split('\n');
+    const colorizedLines = lines.map(line => {
+        if (line.includes(':')) {
+            // Key'leri ve değerleri ayır
+            const [keyPart, ...valueParts] = line.split(':');
+            const valuePart = valueParts.join(':');
+            
+            // Key'i mavi yap
+            const coloredKey = keyPart.replace(/"([^"]+)"/, '\x1b[94m"$1"\x1b[0m');
+            
+            // String değeri yeşil yap
+            const coloredValue = valuePart.replace(/"([^"]+)"/, '\x1b[92m"$1"\x1b[0m');
+            
+            return coloredKey + ':' + coloredValue;
+        } else {
+            // Array elemanlarını veya diğer string değerleri yeşil yap
+            return line.replace(/"([^"]+)"/, '\x1b[92m"$1"\x1b[0m');
+        }
+    });
+
+    return colorizedLines.join('\n');
+}
+
 const commands = {
     'docker': async (args) => {
         if (args[0] === 'compose' && args[1] === 'up') {
@@ -78,23 +104,23 @@ const commands = {
             }
             
             writeLine('Starting infrastructure containers...');
-            await simulateLoading('Creating network "portfolio_default" ', 300);
-            await new Promise(r => setTimeout(r, 300));
+            await simulateLoading('Creating network "portfolio_default" ', 200);
+            await new Promise(r => setTimeout(r, 200));
             
             writeLine('\nStarting postgresql...');
-            await simulateLoading('Creating container ', 500);
+            await simulateLoading('Creating container ', 300);
             writeLine(`c3d4e5f6g7h8   | PostgreSQL Database starting`);
             writeLine(`c3d4e5f6g7h8   | PostgreSQL init process complete; ready for start up.`);
             writeLine(`c3d4e5f6g7h8   | ${getCurrentTimestamp()} UTC [1] LOG:  database system is ready to accept connections`);
             
-            await new Promise(r => setTimeout(r, 300));
+            await new Promise(r => setTimeout(r, 200));
             writeLine('\nStarting redis...');
-            await simulateLoading('Creating container ', 400);
+            await simulateLoading('Creating container ', 250);
             writeLine(`d4e5f6g7h8i9   | ${getCurrentTimestamp(1)} * Ready to accept connections`);
             
-            await new Promise(r => setTimeout(r, 300));
+            await new Promise(r => setTimeout(r, 200));
             writeLine('\nStarting kafka...');
-            await simulateLoading('Creating container ', 500);
+            await simulateLoading('Creating container ', 300);
             writeLine(`e5f6g7h8i9j0   | [${getCurrentTimestamp(2)}] INFO Kafka Server started`);
             
             writeLine('\n\x1b[32mInfrastructure containers are ready\x1b[0m\n');
@@ -117,9 +143,9 @@ const commands = {
                 // Spring Boot başlatma çıktılarında timestamp güncelleme
                 const startTime = getCurrentTimestamp();
                 writeLine('Creating Spring Boot container...');
-                await simulateLoading('Starting container ', 500);
+                await simulateLoading('Starting container ', 300);
                 writeLine('\n[+] Container created: springapp');
-                await new Promise(r => setTimeout(r, 500));
+                await new Promise(r => setTimeout(r, 300));
                 
                 writeLine('\n  .   ____          _            __ _ _');
                 writeLine(' /\\\\ / ___\'_ __ _ _(_)_ __  __ _ \\ \\ \\ \\');
@@ -128,24 +154,24 @@ const commands = {
                 writeLine('  \'  |____| .__|_| |_|_| |_\\__, | / / / /');
                 writeLine(' =========|_|==============|___/=/_/_/_/');
                 writeLine(' :: Spring Boot ::                (v3.4.1)');
-                await new Promise(r => setTimeout(r, 500));
+                await new Promise(r => setTimeout(r, 300));
 
                 writeLine(`\n${getCurrentTimestamp()}  INFO 1 --- [           main] c.s.UserServiceApplication               : Starting UserServiceApplication v1.0.0`);
                 await new Promise(r => setTimeout(r, 300));
                 writeLine(`${getCurrentTimestamp()}  INFO 1 --- [           main] c.s.UserServiceApplication               : No active profile set, falling back to 1 default profile: "default"`);
-                await new Promise(r => setTimeout(r, 500));
+                await new Promise(r => setTimeout(r, 300));
                 writeLine(`${getCurrentTimestamp()}  INFO 1 --- [           main] .s.d.r.c.RepositoryConfigurationDelegate : Bootstrapping Spring Data JPA repositories in DEFAULT mode.`);
-                await new Promise(r => setTimeout(r, 400));
+                await new Promise(r => setTimeout(r, 300));
                 writeLine(`${getCurrentTimestamp()}  INFO 1 --- [           main] .s.d.r.c.RepositoryConfigurationDelegate : Finished Spring Data repository scanning in 123 ms. Found 5 JPA repository interfaces.`);
-                await new Promise(r => setTimeout(r, 400));
+                await new Promise(r => setTimeout(r, 300));
                 writeLine(`${getCurrentTimestamp()}  INFO 1 --- [           main] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat initialized with port(s): 8080 (http)`);
                 await new Promise(r => setTimeout(r, 300));
                 writeLine(`${getCurrentTimestamp()}  INFO 1 --- [           main] o.apache.catalina.core.StandardService   : Starting service [Tomcat]`);
-                await new Promise(r => setTimeout(r, 400));
+                await new Promise(r => setTimeout(r, 300));
                 writeLine(`${getCurrentTimestamp()}  INFO 1 --- [           main] o.s.s.web.DefaultSecurityFilterChain     : Will secure any request with [org.springframework.security.web.session.DisableEncodeUrlFilter@...]`);
-                await new Promise(r => setTimeout(r, 400));
+                await new Promise(r => setTimeout(r, 300));
                 writeLine(`${getCurrentTimestamp()}  INFO 1 --- [           main] o.s.b.a.e.web.EndpointLinksResolver      : Exposing 13 endpoint(s) beneath base path \'/actuator\'`);
-                await new Promise(r => setTimeout(r, 200));
+                await new Promise(r => setTimeout(r, 300));
                 writeLine(`${getCurrentTimestamp()}  INFO 1 --- [           main] c.s.UserServiceApplication               : Started UserServiceApplication in 3.666 seconds (JVM running for 4.142)`);
                 
                 writeLine('\n\x1b[32mContainer springapp is now running\x1b[0m\n');
@@ -214,13 +240,14 @@ const commands = {
             return;
         }
 
-        await simulateLoading('Sending request ', 800);
+        await simulateLoading('Sending request ', 300);
         if (endpoint.includes('/api/profile')) {
-            await simulateLoading('Fetching profile ', 600);
-            writeLine('HTTP/1.1 200 OK');
-            writeLine('Content-Type: application/json');
-            writeLine('');
-            writeLine(JSON.stringify({
+            await simulateLoading('Fetching profile ', 200);
+            term.write('HTTP/1.1 200 OK\r\n');
+            term.write('Content-Type: application/json\r\n');
+            term.write('\r\n');
+            
+            const response = {
                 developer: {
                     name: "Backend Developer",
                     current_position: {
@@ -252,13 +279,16 @@ const commands = {
                         tools: ["Docker", "Kubernetes", "Kafka"]
                     }
                 }
-            }, null, 2));
+            };
+            
+            const colorized = colorizeJson(response);
+            term.write(colorized + '\r\n');
         } else if (endpoint.includes('/api/experience')) {
-            await simulateLoading('Fetching experience ', 500);
-            writeLine('HTTP/1.1 200 OK');
-            writeLine('Content-Type: application/json');
-            writeLine('');
-            writeLine(JSON.stringify({
+            await simulateLoading('Fetching experience ', 200);
+            term.write('HTTP/1.1 200 OK\r\n');
+            term.write('Content-Type: application/json\r\n');
+            term.write('\r\n');
+            term.write(colorizeJson({
                 current: {
                     company: "Sahibinden.com",
                     role: "Software Developer",
@@ -279,34 +309,34 @@ const commands = {
                     type: "Part-time",
                     focus: ["Java Development", "Unit Testing", "Team Collaboration"]
                 }]
-            }, null, 2));
+            }) + '\r\n');
         } else if (endpoint.includes('api/health')) {
-            writeLine('HTTP/1.1 200 OK');
-            writeLine('Content-Type: application/json');
-            writeLine('');
-            writeLine(JSON.stringify({
+            term.write('HTTP/1.1 200 OK\r\n');
+            term.write('Content-Type: application/json\r\n');
+            term.write('\r\n');
+            term.write(colorizeJson({
                 status: "UP",
                 components: {
                     db: { status: "UP" },
                     redis: { status: "UP" },
                     kafka: { status: "UP" }
                 }
-            }, null, 2));
+            }) + '\r\n');
         } else if (endpoint.includes('api/metrics')) {
-            writeLine('HTTP/1.1 200 OK');
-            writeLine('Content-Type: application/json');
-            writeLine('');
-            writeLine(JSON.stringify({
+            term.write('HTTP/1.1 200 OK\r\n');
+            term.write('Content-Type: application/json\r\n');
+            term.write('\r\n');
+            term.write(colorizeJson({
                 "jvm.memory.used": 385392944,
                 "http.server.requests": 23424,
                 "system.cpu.usage": 0.65,
                 "hikaricp.connections.active": 12
-            }, null, 2));
+            }) + '\r\n');
         } else if (endpoint.includes('localhost:8080/actuator/health')) {
-            writeLine('HTTP/1.1 200 OK');
-            writeLine('Content-Type: application/json');
-            writeLine('');
-            writeLine(JSON.stringify({
+            term.write('HTTP/1.1 200 OK\r\n');
+            term.write('Content-Type: application/json\r\n');
+            term.write('\r\n');
+            term.write(colorizeJson({
                 status: "UP",
                 components: {
                     "userService": { status: "UP" },
@@ -314,13 +344,13 @@ const commands = {
                     "redis": { status: "UP", details: { version: "6.2.6" }},
                     "kafka": { status: "UP", details: { brokers: ["kafka-1", "kafka-2"] }}
                 }
-            }, null, 2));
+            }) + '\r\n');
         } else if (endpoint.includes('localhost:8080/api/projects')) {
-            await simulateLoading('Fetching project data ', 600);
-            writeLine('HTTP/1.1 200 OK');
-            writeLine('Content-Type: application/json');
-            writeLine('');
-            writeLine(JSON.stringify({
+            await simulateLoading('Fetching project data ', 200);
+            term.write('HTTP/1.1 200 OK\r\n');
+            term.write('Content-Type: application/json\r\n');
+            term.write('\r\n');
+            term.write(colorizeJson({
                 projects: [{
                     name: "Social Platform Backend",
                     tech_stack: {
@@ -336,25 +366,25 @@ const commands = {
                         "Cache optimization"
                     ]
                 }]
-            }, null, 2));
+            }) + '\r\n');
         } else if (endpoint.includes('localhost:8080/api/links')) {
-            await simulateLoading('Fetching social links ', 400);
-            writeLine('HTTP/1.1 200 OK');
-            writeLine('Content-Type: application/json');
-            writeLine('');
-            writeLine('{');
-            writeLine('  "social_links": {');
+            await simulateLoading('Fetching social links ', 200);
+            term.write('HTTP/1.1 200 OK\r\n');
+            term.write('Content-Type: application/json\r\n');
+            term.write('\r\n');
+            term.write('{');
+            term.write('  "social_links": {');
             // Direkt olarak tıklanabilir link oluştur
-            writeLine(`    "github": "${formatLink('https://github.com/0uz')}",`);
-            writeLine(`    "linkedin": "${formatLink('https://www.linkedin.com/in/oguzhanduymaz/')}",`);
-            writeLine(`    "portfolio": "${formatLink('https://oguzhanduymaz.com')}"`);
-            writeLine('  },');
-            writeLine('  "git": {');
-            writeLine('    "total_commits": "1000+",');
-            writeLine('    "repos": 27,');
-            writeLine('    "languages": ["Java", "Go", "Python"]');
-            writeLine('  }');
-            writeLine('}');
+            term.write(`    "github": "${formatLink('https://github.com/0uz')}",`);
+            term.write(`    "linkedin": "${formatLink('https://www.linkedin.com/in/oguzhanduymaz/')}",`);
+            term.write(`    "portfolio": "${formatLink('https://oguzhanduymaz.com')}"`);
+            term.write('  },');
+            term.write('  "git": {');
+            term.write('    "total_commits": "1000+",');
+            term.write('    "repos": 27,');
+            term.write('    "languages": ["Java", "Go", "Python"]');
+            term.write('  }');
+            term.write('}\r\n');
         }
     },
 

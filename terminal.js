@@ -11,6 +11,30 @@ const terminalState = {
 
 // Terminal container'a bağla
 term.open(document.getElementById('terminal-container'));
+term.options.allowTransparency = true;
+term.options.theme = {
+    background: '#000000',
+    foreground: '#ffffff',
+    cursor: '#ffffff',
+    cursorAccent: '#000000',
+    selection: 'rgba(255, 255, 255, 0.3)',
+    black: '#000000',
+    red: '#e06c75',
+    green: '#98c379',
+    yellow: '#d19a66',
+    blue: '#61afef',
+    magenta: '#c678dd',
+    cyan: '#56b6c2',
+    white: '#abb2bf',
+    brightBlack: '#5c6370',
+    brightRed: '#e06c75',
+    brightGreen: '#98c379',
+    brightYellow: '#d19a66',
+    brightBlue: '#61afef',
+    brightMagenta: '#c678dd',
+    brightCyan: '#56b6c2',
+    brightWhite: '#ffffff'
+};
 
 // Terminal boyutunu ayarla fonksiyonunu güncelle
 function updateTerminalSize() {

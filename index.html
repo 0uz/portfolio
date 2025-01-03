@@ -114,34 +114,20 @@
             const mobileCommands = document.getElementById('mobile-commands');
             mobileCommands.innerHTML = '';
 
-            const command = terminalState.currentLine.trim().toLowerCase();
-            if (command.startsWith('curl')) {
-                const buttons = [
-                    'localhost:8080/api/profile',
-                    'localhost:8080/api/experience',
-                    'localhost:8080/api/projects',
-                    'localhost:8080/api/links'
-                ];
-                buttons.forEach(btn => {
-                    const button = document.createElement('button');
-                    button.textContent = btn;
-                    button.onclick = () => executeCommand(`curl ${btn}`);
-                    mobileCommands.appendChild(button);
-                });
-            } else {
-                const buttons = [
-                    'help',
-                    'clear',
-                    'docker ps',
-                    'curl localhost:8080/api/profile'
-                ];
-                buttons.forEach(btn => {
-                    const button = document.createElement('button');
-                    button.textContent = btn;
-                    button.onclick = () => executeCommand(btn);
-                    mobileCommands.appendChild(button);
-                });
-            }
+            const buttons = [
+            'profile',
+            'experience',
+            'projects',
+            'links',
+            'clear'
+            ];
+            
+            buttons.forEach(btn => {
+            const button = document.createElement('button');
+            button.textContent = btn;
+            button.onclick = () => executeCommand('curl localhost:8080/api/' + (btn === 'clear' ? '' : btn));
+            mobileCommands.appendChild(button);
+            });
         }
 
         // Terminal giriş/çıkış yönetimi

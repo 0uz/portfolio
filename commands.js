@@ -510,41 +510,19 @@ function updateMobileCommands() {
     if (!mobileCommands) return;
 
     mobileCommands.innerHTML = '';
-    const currentInput = terminalState.currentLine.trim().toLowerCase();
 
-    let buttons = [];
-    
-    if (currentInput.startsWith('curl')) {
-        buttons = [
-            'localhost:8080/api/profile',
-            'localhost:8080/api/experience',
-            'localhost:8080/api/projects',
-            'localhost:8080/api/links'
-        ];
-    } else if (currentInput.startsWith('docker')) {
-        buttons = [
-            'ps',
-            'run -d springapp',
-            'run -d goapp',
-            'compose up'
-        ];
-    } else {
-        buttons = [
-            'help',
-            'clear',
-            'curl localhost:8080/api/profile',
-            'docker ps'
-        ];
-    }
+    const buttons = [
+        { text: 'clear', cmd: 'clear' },
+        { text: 'profile', cmd: 'curl localhost:8080/api/profile' },
+        { text: 'experience', cmd: 'curl localhost:8080/api/experience' },
+        { text: 'projects', cmd: 'curl localhost:8080/api/projects' },
+        { text: 'links', cmd: 'curl localhost:8080/api/links' },
+    ];
 
-    buttons.forEach(cmd => {
+    buttons.forEach(({ text, cmd }) => {
         const button = document.createElement('button');
-        button.textContent = cmd;
-        button.onclick = () => {
-            terminalState.currentLine = currentInput.split(' ')[0] + ' ' + cmd;
-            refreshLine();
-            executeCommand(terminalState.currentLine);
-        };
+        button.textContent = text;
+        button.onclick = () => executeCommand(cmd);
         mobileCommands.appendChild(button);
     });
 }

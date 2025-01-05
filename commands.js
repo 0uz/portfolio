@@ -372,19 +372,23 @@ const commands = {
             term.write('HTTP/1.1 200 OK\r\n');
             term.write('Content-Type: application/json\r\n');
             term.write('\r\n');
-            term.write('{');
-            term.write('  "social_links": {');
-            // Direkt olarak tıklanabilir link oluştur
-            term.write(`    "github": "${formatLink('https://github.com/0uz')}",`);
-            term.write(`    "linkedin": "${formatLink('https://www.linkedin.com/in/oguzhanduymaz/')}",`);
-            term.write(`    "portfolio": "${formatLink('https://oguzhanduymaz.com')}"`);
-            term.write('  },');
-            term.write('  "git": {');
-            term.write('    "total_commits": "1000+",');
-            term.write('    "repos": 27,');
-            term.write('    "languages": ["Java", "Go", "Python"]');
-            term.write('  }');
-            term.write('}\r\n');
+            const response = {
+                social_links: {
+                    github: 'https://github.com/0uz',
+                    linkedin: 'https://www.linkedin.com/in/oguzhanduymaz/',
+                    portfolio: 'https://oguzhanduymaz.com'
+                },
+                git: {
+                    total_commits: "1000+",
+                    repos: 27,
+                    languages: ["Java", "Go", "Python"]
+                }
+            };
+            let colorized = colorizeJson(response);
+            
+            // Format links after colorizing
+            colorized = colorized.replace(/"(https?:\/\/[^"]+)"/g, (match, url) => `"${formatLink(url)}"`);
+            term.write(colorized + '\r\n');
         }
     },
 
